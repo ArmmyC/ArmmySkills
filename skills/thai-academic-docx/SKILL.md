@@ -5,7 +5,7 @@ description: Format or generate Microsoft Word DOCX files for Thai coursework, h
 
 # Thai Academic DOCX
 
-Create clean, editable Microsoft Word documents that look like conventional Thai university coursework rather than generic English-language Word documents.
+Create clean, editable Microsoft Word documents that look like conventional Thai university coursework rather than generic themed Word documents.
 
 This skill is an **opinionated default for casual academic work**, not a claim that every Thai university uses one universal standard.
 
@@ -39,6 +39,19 @@ Do not automatically use these defaults for:
 - theses or dissertations with an institutional template
 - journal or conference submissions with author guidelines
 - documents for which the user supplied a different style specification
+
+## Visual character
+
+Default to a plain academic appearance.
+
+- Black/automatic text on a white page.
+- No decorative horizontal rules under titles or headings.
+- No colored paragraph borders, accent bars, theme lines, shading, gradients, or ornamental separators unless explicitly requested.
+- Do not inherit decorative borders or colors from Word's built-in `Title`, `Subtitle`, or heading styles without checking them.
+- Explicitly clear paragraph borders and shading from report title and heading styles when the source template may contain theme decoration.
+- Use whitespace, font weight, size, and indentation to communicate hierarchy rather than decorative graphics.
+
+A casual Thai coursework report should look intentionally formatted, not like a Word theme was applied automatically.
 
 ## Default page layout
 
@@ -83,9 +96,18 @@ Use `TH Sarabun New` for ordinary Thai and English prose in the same report unle
 
 Do not allow Word to silently substitute a different Latin font for English words inside Thai paragraphs when the surrounding style is meant to be uniform.
 
+Set proofing language metadata where practical:
+
+- Thai spans: `th-TH`
+- English spans: `en-US`, unless another English locale is clearly appropriate
+
+When Thai and English appear in the same paragraph, split spans into separate runs when useful so each script can carry the correct proofing language without changing the visual font. This helps Word avoid marking ordinary English words as misspellings merely because the paragraph is primarily Thai.
+
+Do not disable spelling/grammar proofing globally just to hide red squiggles. Prefer correct language metadata. Acronyms, course codes, commands, identifiers, and uncommon technical terms may still be legitimately flagged by Word.
+
 For mathematical equations, use a proper math font instead of forcing `TH Sarabun New` onto mathematical glyphs.
 
-## Word font properties for Thai
+## Word font and language properties for Thai
 
 Thai is handled by Microsoft Office as a complex-script language. When directly manipulating WordprocessingML, ensure complex-script font and size properties are set, not only Latin font properties.
 
@@ -102,7 +124,7 @@ For 16 pt body text, a robust run-font setup is conceptually equivalent to:
 
 `32` half-points equals 16 pt.
 
-When practical, also set Thai language metadata such as `th-TH` for complex-script content.
+When manipulating XML directly, use appropriate `w:lang` metadata for Latin and complex-script text. When practical, Thai complex-script content should resolve to `th-TH`, while English prose should resolve to an English proofing locale such as `en-US`.
 
 If the implementation library exposes only high-level font APIs, verify the generated DOCX XML or render the document to ensure Thai runs actually use the intended font.
 
@@ -110,21 +132,63 @@ If the implementation library exposes only high-level font APIs, verify the gene
 
 Use real Word styles rather than manually bolding ordinary paragraphs and pretending they are headings.
 
+The hierarchy must be visible through **left indentation** for numbered subsections. Do not allow heading styles to inherit the body's 1.25 cm first-line indent.
+
 Default hierarchy:
 
-| Style | Font | Size | Weight | Alignment | First-line indent |
-| --- | --- | ---: | --- | --- | ---: |
-| Document title | TH Sarabun New | 20 pt | Bold | Center | 0 cm |
-| Heading 1 | TH Sarabun New | 18 pt | Bold | Left | 0 cm |
-| Heading 2 | TH Sarabun New | 16 pt | Bold | Left | 0 cm |
-| Heading 3 | TH Sarabun New | 16 pt | Bold | Left | 0 cm |
-| Body | TH Sarabun New | 16 pt | Regular | Thai Distributed / Justified | 1.25 cm |
+| Style | Font | Size | Weight | Alignment | Left indent | First-line indent |
+| --- | --- | ---: | --- | --- | ---: | ---: |
+| Document title | TH Sarabun New | 20 pt | Bold | Center | 0 cm | 0 cm |
+| Heading 1 / `1.` | TH Sarabun New | 18 pt | Bold | Left | 0 cm | 0 cm |
+| Heading 2 / `1.1` | TH Sarabun New | 16 pt | Bold | Left | 1.25 cm | 0 cm |
+| Heading 3 / `1.1.1` | TH Sarabun New | 16 pt | Bold | Left | 2.50 cm | 0 cm |
+| Body | TH Sarabun New | 16 pt | Regular | Thai Distributed / Justified | 0 cm | 1.25 cm |
+
+Conceptually:
+
+```text
+1. หัวข้อหลัก
+    1.1 หัวข้อย่อย
+        1.1.1 หัวข้อย่อยระดับถัดไป
+
+    ย่อหน้าเนื้อหาปกติมี first-line indent 1.25 cm
+```
+
+The visible hierarchy is paragraph geometry, not literal tab characters. `Heading 2 = one 1.25 cm level` does **not** mean inserting `\t` before `1.1`.
+
+When native multilevel numbering is used:
+
+- anchor Heading 1 numbering at 0 cm
+- anchor Heading 2 numbering at 1.25 cm
+- anchor Heading 3 numbering at 2.50 cm
+- use the numbering/list text position or hanging indent so wrapped heading lines align with the heading text, not underneath the number
+- do not let numbering settings add an accidental extra hierarchy indent
+
+Explicitly set both `left_indent` and `first_line_indent` for every heading style. Do not rely on inheritance from `Normal`, because body indentation can otherwise leak into headings.
 
 Use `keep_with_next` or the Word equivalent for headings so a heading is not stranded at the bottom of a page.
 
 Do not create more heading levels than the document needs.
 
 For major chapters in a long report, a new-page start may be appropriate. Do not force every Heading 1 onto a new page in short homework or reports.
+
+## Document title
+
+Default title behavior:
+
+- 20 pt TH Sarabun New, bold, centered
+- left indent: 0 cm
+- first-line indent: 0 cm
+- black/automatic text
+- no paragraph border
+- no bottom rule
+- no colored underline or accent line
+- no shading
+- moderate paragraph spacing rather than blank lines for separation
+
+Avoid awkward orphaned title fragments, such as leaving a single final English word on its own line when a small size or wording adjustment can produce a more balanced title. Do not aggressively shrink a title merely to force one line.
+
+For title/subtitle or course information, use separate paragraphs with intentional spacing. Do not create a separator line between them unless requested.
 
 ## Bold, italic, and underline
 
@@ -169,11 +233,17 @@ Default normal paragraph:
 - left indent: 0 cm
 - right indent: 0 cm
 
+Default heading indentation:
+
+- Heading 1: left 0 cm, first-line 0 cm
+- Heading 2: left 1.25 cm, first-line 0 cm
+- Heading 3: left 2.50 cm, first-line 0 cm
+
 Default tab-stop interval when a tab stop is actually needed:
 
 - 1.25 cm
 
-For nested structures, use approximately 0.625 to 1.25 cm additional indentation per level depending on the structure and available width. Prefer consistent increments throughout the document.
+For nested non-heading structures, use approximately 0.625 to 1.25 cm additional indentation per level depending on the structure and available width. Prefer consistent increments throughout the document.
 
 For references that require a hanging indent:
 
@@ -182,7 +252,7 @@ For references that require a hanging indent:
 
 Never create visual indentation with repeated spaces.
 
-Do not insert literal tab characters merely to simulate a first-line indent. Use the paragraph's `first_line_indent` property.
+Do not insert literal tab characters merely to simulate a first-line indent or heading level. Use paragraph/list indentation properties.
 
 Use explicit tab stops only when tabular alignment is semantically appropriate.
 
@@ -205,7 +275,7 @@ Use native Word numbering and bullets.
 
 Do not manually type bullet glyphs or create alignment using spaces.
 
-Suggested indentation:
+For ordinary lists, suggested indentation is:
 
 - level 1 left indent: about 1.25 cm
 - level 2 left indent: about 2.50 cm
@@ -213,7 +283,7 @@ Suggested indentation:
 
 Use hanging indentation so multi-line list items align under the item text, not under the bullet or number.
 
-For numbered report sections such as `1`, `1.1`, and `1.1.1`, use a real multilevel list linked to heading styles when practical.
+For numbered report sections such as `1.`, `1.1`, and `1.1.1`, use a real multilevel list linked to heading styles when practical, following the heading indentation rules above rather than the ordinary-list defaults.
 
 ## Tables
 
@@ -427,22 +497,24 @@ Prefer:
 - Word styles
 - paragraph properties
 - native numbering
-- actual tab stops
+- actual tab stops only when semantically appropriate
 - real page and section breaks
 - native Word tables
 - native Word equations
 - Word caption/cross-reference fields when practical
 - proper headers and footers
+- explicit style properties instead of relying on inherited theme decoration
 
 Avoid:
 
 - repeated spaces for alignment
 - repeated blank paragraphs for vertical spacing
-- literal tabs as a replacement for paragraph indentation
+- literal tabs as a replacement for paragraph or heading indentation
 - manually typed bullet characters when Word numbering can be used
 - screenshots of equations that can be native math
 - screenshots of tables that can be native tables
 - hard-coded figure/table references such as "above" and "below"
+- decorative title/heading rules or borders not requested by the user
 - excessive manual run-by-run formatting when a reusable Word style is appropriate
 
 ## Implementation guidance for `python-docx`
@@ -451,12 +523,18 @@ When using `python-docx` or another library that does not expose every Word feat
 
 1. Define reusable paragraph and character styles early.
 2. Set section size and margins explicitly.
-3. Configure paragraph first-line indentation rather than inserting tabs.
-4. Use low-level WordprocessingML only for features the high-level API cannot represent correctly.
-5. Set complex-script font (`w:cs`) and complex-script size (`w:szCs`) for Thai text when needed.
-6. Use OMML for native equations when equations are required.
-7. Use Word field codes for TOCs, captions, numbering, or cross-references when reliable and appropriate.
-8. Do not assume a DOCX is correct merely because the generation library completed without an exception.
+3. Configure body first-line indentation with paragraph properties rather than inserting tabs.
+4. Explicitly set heading left indents and reset heading first-line indents to zero; do not let them inherit body indentation.
+5. Explicitly clear unwanted paragraph borders/shading from title and heading styles, using low-level WordprocessingML if necessary.
+6. Set title and heading font color explicitly to automatic/black when a template may carry accent colors.
+7. Set complex-script font (`w:cs`) and complex-script size (`w:szCs`) for Thai text when needed.
+8. Set proofing language metadata for Thai and English spans where practical; split runs by script when this improves proofing behavior.
+9. Use low-level WordprocessingML only for features the high-level API cannot represent correctly.
+10. Use OMML for native equations when equations are required.
+11. Use Word field codes for TOCs, captions, numbering, or cross-references when reliable and appropriate.
+12. Do not assume a DOCX is correct merely because the generation library completed without an exception.
+
+When creating styles from built-in Word styles, inspect inherited paragraph properties. A heading based on `Normal` can accidentally inherit `first_line_indent = 1.25 cm`; a title or heading style can also inherit a border, shading, or theme color. Reset properties explicitly when the desired value is zero/none.
 
 ## Validation
 
@@ -470,7 +548,12 @@ Before delivering a generated or reformatted DOCX, verify as much of the followi
 - styles are actually applied
 - Thai body text resolves to TH Sarabun New
 - complex-script font properties are present when required
-- first-line indentation is implemented as paragraph formatting
+- Thai/English proofing language metadata is sensible where it was configured
+- body first-line indentation is implemented as paragraph formatting
+- Heading 1 has 0 cm left indent and 0 cm first-line indent
+- Heading 2 has 1.25 cm left indent and 0 cm first-line indent
+- Heading 3 has 2.50 cm left indent and 0 cm first-line indent
+- title and heading styles have no unintended paragraph borders or shading
 - no accidental repeated spaces or blank paragraphs are being used for layout
 - headings use heading styles
 - list numbering is native where practical
@@ -486,6 +569,11 @@ Render to PDF or inspect in Microsoft Word/LibreOffice when available and check:
 - line spacing is comfortable
 - distributed text does not create extreme gaps
 - Thai/English mixed text does not unexpectedly change fonts
+- ordinary English words are not broadly flagged because of incorrect proofing language
+- title has no unintended horizontal line, border, accent color, or shading
+- title wrapping looks intentional and does not leave an avoidable single-word orphan
+- Heading 1 is visibly flush with the main text margin
+- Heading 2 and Heading 3 show a clear nested hierarchy
 - headings have consistent hierarchy
 - no heading is stranded at the bottom of a page
 - tables fit within margins
@@ -518,34 +606,48 @@ thai_academic_report:
     prose_font: "TH Sarabun New"
     body_size: 16pt
     math_font: "Cambria Math"
+    thai_language: "th-TH"
+    english_language: "en-US"
 
   title:
     size: 20pt
     bold: true
     alignment: center
+    left_indent: 0cm
+    first_line_indent: 0cm
+    color: black
+    border: none
+    shading: none
 
   heading_1:
     size: 18pt
     bold: true
     alignment: left
+    left_indent: 0cm
+    first_line_indent: 0cm
     keep_with_next: true
 
   heading_2:
     size: 16pt
     bold: true
     alignment: left
+    left_indent: 1.25cm
+    first_line_indent: 0cm
     keep_with_next: true
 
   heading_3:
     size: 16pt
     bold: true
     alignment: left
+    left_indent: 2.50cm
+    first_line_indent: 0cm
     keep_with_next: true
 
   body:
     size: 16pt
     alignment: thai_distributed
     fallback_alignment: justified
+    left_indent: 0cm
     first_line_indent: 1.25cm
     line_spacing: 1.0
     space_before: 0pt
