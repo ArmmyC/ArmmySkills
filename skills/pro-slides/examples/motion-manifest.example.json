@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "slides": {
+    "2": {
+      "rename": {
+        "Hero Product": "!!hero-product",
+        "Controller Diagram": "!!controller"
+      },
+      "transition": {
+        "type": "morph",
+        "mode": "object",
+        "duration": 0.75
+      },
+      "animations": [
+        {
+          "shape": "Problem Label",
+          "effect": "fade",
+          "trigger": "on-click",
+          "duration": 0.35
+        }
+      ]
+    },
+    "3": {
+      "rename": {
+        "Hero Product": "!!hero-product",
+        "Controller Diagram": "!!controller"
+      },
+      "transition": {
+        "type": "morph",
+        "mode": "object",
+        "duration": 0.8
+      },
+      "animations": [
+        {
+          "shape": "Result Metric",
+          "effect": "zoom",
+          "trigger": "after-previous",
+          "duration": 0.45,
+          "delay": 0.12
+        }
+      ]
+    },
+    "5": {
+      "insert3d": [
+        {
+          "file": "assets/robot.glb",
+          "name": "!!robot",
+          "left": 500,
+          "top": 105,
+          "width": 300,
+          "height": 300,
+          "rotation": {
+            "x": 0,
+            "y": 20,
+            "z": 0
+          },
+          "field_of_view": 35
+        }
+      ]
+    },
+    "6": {
+      "insert3d": [
+        {
+          "file": "assets/robot.glb",
+          "name": "!!robot",
+          "left": 430,
+          "top": 80,
+          "width": 360,
+          "height": 360,
+          "rotation": {
+            "x": 5,
+            "y": 72,
+            "z": 0
+          },
+          "field_of_view": 35
+        }
+      ],
+      "transition": {
+        "type": "morph",
+        "mode": "object",
+        "duration": 0.9
+      },
+      "animations": [
+        {
+          "shape": "Sensor Callout",
+          "effect": "wipe",
+          "trigger": "on-click",
+          "duration": 0.4
+        },
+        {
+          "shape": "Sensor Detail",
+          "effect": "fade",
+          "trigger": "with-previous",
+          "duration": 0.35,
+          "delay": 0.05
+        }
+      ]
+    }
+  }
+}
