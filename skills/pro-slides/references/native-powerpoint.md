@@ -126,6 +126,8 @@ Manifest form:
 }
 ```
 
+Morph is applied to the **destination slide**. If slide 2 has a Morph transition, PowerPoint animates the change from slide 1 into slide 2. Therefore any forced `!!` object identity used by that transition must exist on both slide 1 and slide 2. The manifest may contain rename-only entries on source slides for this reason.
+
 Supported Morph modes:
 
 - `object`
