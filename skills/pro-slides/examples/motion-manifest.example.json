@@ -1,6 +1,12 @@
 {
   "version": 1,
   "slides": {
+    "1": {
+      "rename": {
+        "Hero Product": "!!hero-product",
+        "Controller Diagram": "!!controller"
+      }
+    },
     "2": {
       "rename": {
         "Hero Product": "!!hero-product",
